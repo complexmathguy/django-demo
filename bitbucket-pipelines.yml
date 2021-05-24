@@ -1,0 +1,30 @@
+
+image: python:3.7
+
+pipelines:
+  default:
+  - step:
+      name: install djangodemo dependencies
+      script:
+
+          - sudo python -m pip install --upgrade pip 
+          - sudo pip install --upgrade pip
+          - sudo pip install pipenv
+          - sudo pipenv install
+          - sudo pipenv install Django==2.2
+          - sudo pipenv install pytest-django
+      name: build/test djangodemo 
+      script:
+      
+
+          - [ $EUID == 0 ] && SUDO=" || SUDO=sudo && $SUDO chown -R circleci:circleci /usr/local/bin
+          - [ $EUID == 0 ] && SUDO=" || SUDO=sudo && $SUDO chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
+          - sudo pipenv run pytest --junitxml=test-results/junit.xml djangodemo/tests
+          - sudo python djangodemo/setup.py sdist
+
+      caches:
+          - pip
+      services:
+          - mongo
+
+

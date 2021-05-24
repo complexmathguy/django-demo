@@ -1,0 +1,26 @@
+FROM python:3.7
+
+# update and install dos2unix
+RUN apt-get update --fix-missing && \
+apt-get install -y dos2unix
+
+# assign vars for Git
+RUN export EMAIL=dev@harbormaster.ai
+RUN export GIT_AUTHOR_NAME=Dev Team
+RUN export GIT_COMMITTER_NAME=Turnstone Biologics
+      
+RUN export PIP_CACHE_DIR=.cache/pip
+RUN pip install -U pip
+RUN pip install Django==2.2
+
+# copy it all to gitRoot directory
+COPY . /gitRoot
+
+# ensure unix formatted
+RUN dos2unix /gitRoot/projectbuild.sh
+RUN dos2unix /gitRoot/terraform.sh
+
+# ensure executable
+RUN chmod 777 /gitRoot/projectbuild.sh
+RUN chmod 777 /gitRoot/terraform.sh
+

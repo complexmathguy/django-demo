@@ -1,0 +1,55 @@
+version: 0.2
+env:
+  variables:
+    PIPENV_VENV_IN_PROJECT: "true"
+
+phases:
+  install:
+    runtime-versions:
+        python: 3.7
+        docker: 18
+    commands:
+
+
+      - sudo python -m pip install --upgrade pip  
+      - sudo pip install --upgrade pip 
+      - sudo pip install pipenv 
+      - sudo pipenv install 
+      - sudo pipenv install Django==2.2 
+      - sudo pipenv install pytest-django 
+    finally:
+      - echo Install phase complete...
+  build:
+    commands:
+      
+
+      - [ $EUID == 0 ] && SUDO=" || SUDO=sudo && $SUDO chown -R circleci:circleci /usr/local/bin 
+      - [ $EUID == 0 ] && SUDO=" || SUDO=sudo && $SUDO chown -R circleci:circleci /usr/local/lib/python3.7/site-packages 
+      - sudo pipenv run pytest --junitxml=test-results/junit.xml djangodemo/tests 
+      - sudo python djangodemo/setup.py sdist 
+  post_build:
+    commands:
+      - echo Building Docker Image...
+      - cd ${CODEBUILD_SRC_DIR}
+      - docker login --username tylertravismya --password 69cutlass
+      - docker build -t theharbormaster/django-demo:latest .
+      - docker push theharbormaster/django-demo:latest 
+
+      - echo Installing Terraform...
+      - wget https://releases.hashicorp.com/terraform/0.11.13/terraform_0.11.13_linux_amd64.zip
+      - unzip ./terraform_0.11.13_linux_amd64.zip -d /usr/local/bin/
+      - terraform -v
+      - echo Running Terraform plan...
+      - echo initializaing terraform
+      - cd terraform && terraform init --input=false"
+      - echo running terraform plan
+      - terraform plan --input=false --out=terraform.plan -var host=https://xxx.xxx.xxx.xxx -var username= -var password= -var region=- -var project=
+      - echo running terraform plan
+      terraform apply -auto-approve "terraform.plan"
+
+artifacts:
+  files:
+    - djangodemo/*.egg-info
+  cache:
+    paths:
+      - '/root/.cache/pip'
